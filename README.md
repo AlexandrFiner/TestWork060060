@@ -34,6 +34,8 @@ DB_PASSWORD=
 
 # Postman
 
+https://www.postman.com/milliards/workspace/testwork-mello
+
 # Тесты
 
 Для запуска тестов используйте команду
