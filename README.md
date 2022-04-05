@@ -2,10 +2,15 @@
 
 Используйте [Данный](https://github.com/AlexandrFiner/docker-compose-lamp) образ Docker
 
-> Инструкция есть внутри
-
 > PHP 8.0.10
 
+Скопирауйте настройки окружения
+
+``cp sample.env .env``
+
+Укажите путь до проекта Laravel 
+
+``DOCUMENT_ROOT=``
 
 # Работа с Laravel
 
