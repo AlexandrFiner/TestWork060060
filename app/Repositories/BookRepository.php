@@ -38,7 +38,10 @@ class BookRepository implements BookRepositoryInterface {
                     break;
 
                 case "author_id":
-                    $books->whereHas('authors', fn($query) => $query->where('authors.id', $value));
+                    $authors = explode(self::EXPLODE_SYMBOL, $value);
+                    foreach($authors as $authorId) {
+                        $books->whereHas('authors', fn($query) => $query->where('authors.id', $authorId));
+                    }
                     break;
 
                 case "author_name":

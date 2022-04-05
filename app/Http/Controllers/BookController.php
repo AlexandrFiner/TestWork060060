@@ -22,6 +22,9 @@ class BookController extends Controller
 
     public function index(Request $request): JsonResponse {
         $books = $this->bookRepository->search($request->all());
+        if(empty($books->count()))
+            return $this->respondNotFound('There are no books');
+
         return $this->respondWithSuccess($books);
     }
 
@@ -35,7 +38,7 @@ class BookController extends Controller
         try {
             $book = $this->bookRepository->get($id);
         } catch (\Throwable $e) {
-            return $this->respondError($e->getMessage());
+            return $this->respondNotFound('The book was not found');
         }
         return $this->respondWithSuccess($book);
     }
@@ -55,6 +58,6 @@ class BookController extends Controller
         } catch (\Throwable $e) {
             return $this->respondError($e->getMessage());
         }
-        return $this->respondNoContent();
+        return $this->respondOk('The book has been deleted');
     }
 }
