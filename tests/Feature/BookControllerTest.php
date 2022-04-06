@@ -30,6 +30,10 @@ class BookControllerTest extends TestCase
         ]
     ];
 
+    private array $messageStructure = [
+        'message'
+    ];
+
     private array $errorStructure = [
         'error',
     ];
@@ -61,6 +65,12 @@ class BookControllerTest extends TestCase
             'token' => 'a6b4c03eb907cb344e8aea8cdb41341b28bec380a105a7a126eca2f0fe8bcbe1', // 1|vx4AQKppebZGV7moWenUCcmhwS1uKbxBxnVRQJ6S
             'abilities' => '["*"]',
         ]);
+    }
+
+    public function test_user_not_authorized() {
+        $this->json('GET', 'api/book')
+            ->assertStatus(ResponseAlias::HTTP_UNAUTHORIZED)
+            ->assertJsonStructure($this->messageStructure);
     }
 
     public function test_search_check_valid_format_there_are_books()
