@@ -5,15 +5,10 @@ namespace App\Repositories;
 use App\Interfaces\BookRepositoryInterface;
 use App\Models\Book;
 use App\Traits\Searchable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 
 class BookRepository implements BookRepositoryInterface {
-    const DEFAULT_LIMIT = 0;
-    const EXPLODE_SYMBOL = ',';
-    const SEPARATOR_SYMBOL = ':';
-
     use Searchable;
 
     public function search(array $queryParams): Collection|array
