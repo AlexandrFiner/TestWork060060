@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Interfaces\BookRepositoryInterface;
 use App\Models\Book;
+use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
@@ -13,61 +14,11 @@ class BookRepository implements BookRepositoryInterface {
     const EXPLODE_SYMBOL = ',';
     const SEPARATOR_SYMBOL = ':';
 
+    use Searchable;
+
     public function search(array $queryParams): Collection|array
     {
-        $limit = self::DEFAULT_LIMIT;
-
-        $books = Book::query();
-
-        foreach ($queryParams as $param => $value) {
-            if(empty($value))
-                continue;
-
-            if($param === 'limit') {
-                $limit = (int) $value;
-                continue;
-            }
-
-            switch ($param) {
-                case "id":
-                    $books->where($param, $value);
-                    break;
-
-                case "title":
-                    $books->where($param, 'like', '%'.$value.'%');
-                    break;
-
-                case "author_id":
-                    $authors = explode(self::EXPLODE_SYMBOL, $value);
-                    foreach($authors as $authorId) {
-                        $books->whereHas('authors', fn($query) => $query->where('authors.id', $authorId));
-                    }
-                    break;
-
-                case "author_name":
-                    $books->whereHas('authors', fn($query) => $query->where('authors.name', 'like', '%'.$value.'%'));
-                    break;
-
-                case "sort":
-                    $sorters = explode(self::EXPLODE_SYMBOL, $value);
-                    foreach($sorters as $sorter) {
-                        $data = explode(self::SEPARATOR_SYMBOL, $sorter);
-                        if(!in_array($data[0], ['id', 'title', 'rating']))
-                            continue;
-
-                        if(!isset($data[1]))
-                            $data[1] = 'desc';
-
-                        $books->orderBy($data[0], ($data[1] == 'desc' ? 'desc' : 'asc'));
-                    }
-                    break;
-            }
-        }
-
-        if($limit)
-            $books->take($limit);
-
-        return $books->get();
+        return $this->find($queryParams, Book::class);
     }
 
 
