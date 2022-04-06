@@ -15,14 +15,35 @@ const SORT_DIRECTION = 1;
 
 Trait Searchable {
 
-    protected function getWhereIds(Builder $query, array $queryParams): Builder
+    protected function getFilters(Builder $model, array $filters): Builder
     {
-        if(!isset($queryParams['ids']))
-            return $query;
-
-        $ids = explode(EXPLODE_SYMBOL, $queryParams['ids']);
-        $query->whereIn('id', $ids);
-        return $query;
+        foreach($filters as $filter) {
+            if(isset($filter['pivot'])) {
+                if($filter['multiply']) {
+                    $values = explode(EXPLODE_SYMBOL, $filter['value']);
+                    if(isset($filter['operator']) && $filter['operator'] == 'in')
+                        $model->whereHas($filter['pivot'], fn(Builder $query) => $query->whereIn($filter['pivot'] . '.' . $filter['field'], $values));
+                    else {
+                        foreach ($values as $value)
+                            $model->whereHas($filter['pivot'], fn(Builder $query) => $query->where($filter['pivot'] . '.' . $filter['field'], $filter['operator'] ?? '=', $value));
+                    }
+                } else
+                    $model->whereHas($filter['pivot'], fn(Builder $query) => $query->where($filter['pivot'].'.'.$filter['field'], $filter['operator'] ?? '=', $filter['value']));
+            } else {
+                if($filter['multiply']) {
+                    $values = explode(EXPLODE_SYMBOL, $filter['value']);
+                    if(isset($filter['operator']) && $filter['operator'] == 'in')
+                        $model->whereIn($filter['field'], $values);
+                    else {
+                        foreach ($values as $value) {
+                            $model->where($filter['field'], $filter['operator'] ?? '=', $value);
+                        }
+                    }
+                } else
+                    $model->where($filter['field'], $filter['operator'] ?? '=', $filter['value']);
+            }
+        }
+        return $model;
     }
 
     protected function getSort(Builder $query, array $queryParams): Builder
@@ -46,36 +67,11 @@ Trait Searchable {
         return $queryParams['limit'] ?? -1;
     }
 
-    protected function find(array $queryParams, string $modelName): Collection {
+    protected function find(array $queryParams, string $modelName, array $filters): Collection {
 
         $model = $modelName::query();
 
-        /*
-         * TODO: Не успел чутка доработать, все это тоже нужно нормально разбить
-         */
-        foreach ($queryParams as $param => $value) {
-            if(empty($value))
-                continue;
-
-            switch ($param) {
-                case "title":
-                    $model->where($param, 'like', '%'.$value.'%');
-                    break;
-
-                case "author_ids":
-                    $authors = explode(EXPLODE_SYMBOL, $value);
-                    foreach($authors as $authorId)
-                        $model->whereHas('authors', fn(Builder $query) => $query->where('authors.id', $authorId));
-
-                    break;
-
-                case "author_name":
-                    $model->whereHas('authors', fn(Builder $query) => $query->where('authors.name', 'like', '%'.$value.'%'));
-                    break;
-            }
-        }
-
-        $this->getWhereIds($model, $queryParams);
+        $this->getFilters($model, $filters);
         $this->getSort($model, $queryParams);
         $model->limit($this->getLimit($queryParams));
 

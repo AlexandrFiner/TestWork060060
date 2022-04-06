@@ -18,9 +18,43 @@ class BookRepository implements BookRepositoryInterface {
 
     public function search(array $queryParams): Collection|array
     {
-        return $this->find($queryParams, Book::class);
-    }
+        $filters = [];
+        if(isset($queryParams['ids']))
+            $filters[] = [
+                'field' => 'id',
+                'operator' => 'in',
+                'value' => $queryParams['ids'],
+                'multiply' => true,
+            ];
 
+        if(isset($queryParams['title']))
+            $filters[] = [
+                'field' => 'title',
+                'operator' => 'LIKE',
+                'value' => '%'.$queryParams['title'].'%',
+                'multiply' => false
+            ];
+
+        if(isset($queryParams['author_ids']))
+            $filters[] = [
+                'pivot' => 'authors',
+                'field' => 'id',
+                'operator' => '=',
+                'value' => $queryParams['author_ids'],
+                'multiply' => true
+            ];
+
+        if(isset($queryParams['author_name']))
+            $filters[] = [
+                'pivot' => 'authors',
+                'field' => 'name',
+                'operator' => 'LIKE',
+                'value' => '%'.$queryParams['author_name'].'%',
+                'multiply' => false
+            ];
+
+        return $this->find($queryParams, Book::class, $filters);
+    }
 
     public function create(array $attributes): Book {
         $book = Book::query()->create($attributes);
